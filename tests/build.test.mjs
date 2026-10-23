@@ -18,7 +18,7 @@ test('build writes config, robots, sitemap and fills placeholders', async () => 
   const outDir = mkdtempSync(join(tmpdir(), 'hub-'));
   try {
     const logs = [];
-    await build({ outDir, env: { SITE_URL: 'https://example.com/', SITE_NAME: 'Hub "A"' }, log: (m) => logs.push(m) });
+    await build({ outDir, env: { SITE_URL: 'https://example.com/', SITE_TITLE: 'Hub "A"' }, log: (m) => logs.push(m) });
     const config = readFileSync(join(outDir, 'js/config.js'), 'utf8');
     assert.match(config, /"siteUrl":"https:\/\/example.com"/);
     assert.doesNotMatch(config, /service_role/);
@@ -62,6 +62,22 @@ test('public pages expose no admin entry point and default branding is exact', a
     }
     // The admin shell stays reachable at /admin and is marked noindex.
     assert.ok(readdirSync(join(outDir, 'admin')).includes('index.html'));
+  } finally {
+    rmSync(outDir, { recursive: true, force: true });
+  }
+});
+
+test('build ignores Netlify\'s reserved SITE_NAME (the project name) and keeps the exact branding', async () => {
+  const outDir = mkdtempSync(join(tmpdir(), 'hub-'));
+  try {
+    await build({ outDir, env: { SITE_NAME: 'courageous-blancmange-c78896' }, log() {} });
+    const index = readFileSync(join(outDir, 'index.html'), 'utf8');
+    const admin = readFileSync(join(outDir, 'admin/index.html'), 'utf8');
+    const config = readFileSync(join(outDir, 'js/config.js'), 'utf8');
+    for (const text of [index, admin, config]) assert.doesNotMatch(text, /courageous-blancmange/);
+    assert.match(index, /<span>WhatsApp Contact Hub<\/span>/);
+    assert.match(index, /<title>WhatsApp Contact Hub - /);
+    assert.match(config, /"siteName":"WhatsApp Contact Hub"/);
   } finally {
     rmSync(outDir, { recursive: true, force: true });
   }

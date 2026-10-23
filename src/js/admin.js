@@ -148,7 +148,7 @@ function confirmDialog({ title, message, confirmLabel = 'Delete', danger = true 
 const shell = document.getElementById('shell');
 const sidebar = document.getElementById('sidebar');
 const menuBtn = document.getElementById('menu-btn');
-const siteLabel = shell.dataset.name || 'Contact Hub';
+const siteLabel = shell.dataset.name || 'WhatsApp Contact Hub';
 
 const brandBlock = () => [mark(36), h('span', { class: 'brand-text' }, h('strong', null, siteLabel), h('small', null, 'Admin Panel'))];
 

@@ -4,7 +4,7 @@
 import { SAMPLE_BRANDS } from './sample-data.js';
 
 const cfg = window.HUB_CONFIG || {};
-export const siteName = cfg.siteName || 'Contact Hub';
+export const siteName = cfg.siteName || 'WhatsApp Contact Hub';
 export const siteUrl = (cfg.siteUrl || location.origin).replace(/\/+$/, '');
 export const isConfigured = Boolean(cfg.supabaseUrl && cfg.supabaseAnonKey);
 

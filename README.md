@@ -77,7 +77,7 @@ Copy `.env.example` to `.env` for local builds (it is git-ignored). On your host
 | `SUPABASE_URL` | Project URL |
 | `SUPABASE_ANON_KEY` | Publishable/anon key (public) |
 | `SITE_URL` | Public site URL, used for canonical links, Open Graph and `sitemap.xml` |
-| `SITE_NAME` | Header and page-title name (defaults to `WhatsApp Contact Hub`; if you set it on your host, keep that exact value) |
+| `SITE_TITLE` | Optional header and page-title name; defaults to `WhatsApp Contact Hub`, so you normally leave it unset. Never use `SITE_NAME`: Netlify reserves it and fills it with the project name |
 
 ```bash
 npm run build    # writes dist/
@@ -137,7 +137,7 @@ GitHub Pages is *not* recommended: it cannot rewrite `/brand/<slug>`.
 - [ ] Create the Supabase project and run `0001_init.sql`
 - [ ] Turn off public sign-ups
 - [ ] Create the first admin user and insert their UID into `admin_users`
-- [ ] Set `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SITE_URL`, `SITE_NAME` on your host
+- [ ] Set `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SITE_URL` on your host (`SITE_TITLE` is optional)
 - [ ] Choose a host, connect the domain, deploy (after your review)
 - [ ] Replace sample brands with real brands, logos and numbers in `/admin`
 - [ ] Set up a build hook if you want `sitemap.xml` refreshed automatically

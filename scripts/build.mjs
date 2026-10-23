@@ -46,7 +46,8 @@ export async function build({ outDir = join(root, 'dist'), env = { ...loadEnv(),
   const supabaseUrl = (env.SUPABASE_URL || '').replace(/\/+$/, '');
   const supabaseAnonKey = env.SUPABASE_ANON_KEY || '';
   const siteUrl = (env.SITE_URL || 'http://localhost:8080').replace(/\/+$/, '');
-  const siteName = env.SITE_NAME || 'WhatsApp Contact Hub';
+  // Do not read SITE_NAME: Netlify reserves it and sets it to the project name on every build.
+  const siteName = env.SITE_TITLE || 'WhatsApp Contact Hub';
 
   if (!/^https?:\/\//.test(siteUrl)) throw new Error('SITE_URL must start with http:// or https://');
   if (supabaseUrl && !/^https?:\/\//.test(supabaseUrl)) throw new Error('SUPABASE_URL must start with https://');
@@ -55,7 +56,7 @@ export async function build({ outDir = join(root, 'dist'), env = { ...loadEnv(),
   rmSync(outDir, { recursive: true, force: true });
   cpSync(join(root, 'src'), outDir, { recursive: true });
 
-  // Fill %SITE_URL% / %SITE_NAME% placeholders in every html file.
+  // Fill %SITE_URL% / %SITE_NAME% (template tokens, not env vars) placeholders in every html file.
   const walk = (dir) => readdirSync(dir).flatMap((f) => {
     const p = join(dir, f);
     return statSync(p).isDirectory() ? walk(p) : [p];
