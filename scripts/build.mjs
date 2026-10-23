@@ -42,14 +42,40 @@ async function fetchBrandsForSitemap(url, key) {
   return res.json();
 }
 
-export async function build({ outDir = join(root, 'dist'), env = { ...loadEnv(), ...process.env }, log = console.log } = {}) {
+/** Canonical production origin. Used when SITE_URL is missing or points at localhost. */
+export const PRODUCTION_URL = 'https://whatsapp-link.com';
+const LOCAL_URL = 'http://localhost:8080';
+
+function isLocalHost(hostname) {
+  const h = hostname.toLowerCase().replace(/^\[|\]$/g, '');
+  return h === 'localhost' || h.endsWith('.localhost') || h === '::1' || h === '0.0.0.0' || /^127(\.\d{1,3}){3}$/.test(h);
+}
+
+/**
+ * Public site URL used for canonical links, Open Graph, robots.txt and sitemap.xml.
+ * - Missing/blank, or a localhost address -> PRODUCTION_URL, so a deploy that forgot SITE_URL
+ *   never publishes localhost URLs. A real, non-local SITE_URL is always honoured.
+ * - localDev (`npm run dev` passes --local) keeps http://localhost:8080 / an explicit localhost value.
+ * - A malformed value (not http/https) is an error.
+ */
+export function resolveSiteUrl(raw, { localDev = false } = {}) {
+  const value = String(raw ?? '').trim().replace(/\/+$/, '');
+  if (!value) return { url: localDev ? LOCAL_URL : PRODUCTION_URL, fallback: true };
+  if (!/^https?:\/\//i.test(value)) throw new Error('SITE_URL must start with http:// or https://');
+  let hostname;
+  try { hostname = new URL(value).hostname; } catch { throw new Error('SITE_URL is not a valid URL'); }
+  if (isLocalHost(hostname) && !localDev) return { url: PRODUCTION_URL, fallback: true };
+  return { url: value, fallback: false };
+}
+
+export async function build({ outDir = join(root, 'dist'), env = { ...loadEnv(), ...process.env }, log = console.log, localDev = false } = {}) {
   const supabaseUrl = (env.SUPABASE_URL || '').replace(/\/+$/, '');
   const supabaseAnonKey = env.SUPABASE_ANON_KEY || '';
-  const siteUrl = (env.SITE_URL || 'http://localhost:8080').replace(/\/+$/, '');
+  const { url: siteUrl, fallback: siteUrlFallback } = resolveSiteUrl(env.SITE_URL, { localDev });
   // Do not read SITE_NAME: Netlify reserves it and sets it to the project name on every build.
   const siteName = env.SITE_TITLE || 'WhatsApp Contact Hub';
 
-  if (!/^https?:\/\//.test(siteUrl)) throw new Error('SITE_URL must start with http:// or https://');
+  if (siteUrlFallback && !localDev) log(`note: SITE_URL is missing or points to localhost; using ${PRODUCTION_URL} for canonical URLs, Open Graph and sitemap.xml.`);
   if (supabaseUrl && !/^https?:\/\//.test(supabaseUrl)) throw new Error('SUPABASE_URL must start with https://');
   assertPublicKey(supabaseAnonKey);
 
@@ -100,5 +126,5 @@ export async function build({ outDir = join(root, 'dist'), env = { ...loadEnv(),
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  build().catch((err) => { console.error(`build failed: ${err.message}`); process.exit(1); });
+  build({ localDev: process.argv.includes('--local') }).catch((err) => { console.error(`build failed: ${err.message}`); process.exit(1); });
 }

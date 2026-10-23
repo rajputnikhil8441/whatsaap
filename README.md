@@ -76,7 +76,7 @@ Copy `.env.example` to `.env` for local builds (it is git-ignored). On your host
 | --- | --- |
 | `SUPABASE_URL` | Project URL |
 | `SUPABASE_ANON_KEY` | Publishable/anon key (public) |
-| `SITE_URL` | Public site URL, used for canonical links, Open Graph and `sitemap.xml` |
+| `SITE_URL` | Public site URL for canonical links, Open Graph, `robots.txt` and `sitemap.xml`. Optional: if it is missing or points to localhost, production builds use `https://whatsapp-link.com`. `npm run dev` keeps `http://localhost:8080` for local preview |
 | `SITE_TITLE` | Optional header and page-title name; defaults to `WhatsApp Contact Hub`, so you normally leave it unset. Never use `SITE_NAME`: Netlify reserves it and fills it with the project name |
 
 ```bash
@@ -95,7 +95,7 @@ The output is the `dist/` folder. It needs two rewrites that are already configu
 
 **Vercel**: import the repo; `vercel.json` sets the build, output and rewrites. Add the four variables.
 
-**Custom domain:** add the domain in your host's dashboard, create the DNS records it shows (CNAME for a subdomain, or the A/ALIAS records for an apex domain), wait for HTTPS to be issued, then set `SITE_URL` to `https://your-domain` and redeploy so canonical URLs, Open Graph and the sitemap use it.
+**Custom domain:** add the domain in your host's dashboard, create the DNS records it shows (CNAME for a subdomain, or the A/ALIAS records for an apex domain), wait for HTTPS to be issued, then set `SITE_URL` to `https://your-domain` and redeploy so canonical URLs, Open Graph and the sitemap use it. (The built-in fallback is `https://whatsapp-link.com`; change `PRODUCTION_URL` in `scripts/build.mjs` if the production domain ever changes.)
 
 GitHub Pages is *not* recommended: it cannot rewrite `/brand/<slug>`.
 
@@ -137,7 +137,7 @@ GitHub Pages is *not* recommended: it cannot rewrite `/brand/<slug>`.
 - [ ] Create the Supabase project and run `0001_init.sql`
 - [ ] Turn off public sign-ups
 - [ ] Create the first admin user and insert their UID into `admin_users`
-- [ ] Set `SUPABASE_URL`, `SUPABASE_ANON_KEY` and `SITE_URL` on your host (`SITE_TITLE` is optional)
+- [ ] Set `SUPABASE_URL` and `SUPABASE_ANON_KEY` on your host (`SITE_URL` and `SITE_TITLE` are optional)
 - [ ] Choose a host, connect the domain, deploy (after your review)
 - [ ] Replace sample brands with real brands, logos and numbers in `/admin`
 - [ ] Set up a build hook if you want `sitemap.xml` refreshed automatically
