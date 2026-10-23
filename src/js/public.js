@@ -9,14 +9,14 @@ let lastSnapshot = null;
 const ui = { query: '', cat: 'all', slug: null }; // search text / active category filter
 
 // ------------------------------------------------------------------ shared bits
-function logo(brand, size) {
+function logo(brand, size, eager = false) {
   const url = logoUrl(brand);
   const fallback = () => h('div', { class: `logo logo-${size} logo-fallback`, 'aria-hidden': 'true' }, initials(brand.name));
   if (!url) return fallback();
-  const px = size === 'lg' ? 88 : 72;
+  const px = size === 'lg' ? 88 : 64;
   const img = h('img', {
     class: `logo logo-${size}`, src: url, alt: `${brand.name} logo`, width: px, height: px,
-    loading: size === 'lg' ? 'eager' : 'lazy', decoding: 'async',
+    loading: size === 'lg' || eager ? 'eager' : 'lazy', decoding: 'async',
   });
   img.addEventListener('error', () => img.replaceWith(fallback()), { once: true });
   return img;
@@ -56,13 +56,14 @@ function brandCards(brands) {
       ui.query ? `No brands match “${ui.query}”.` : 'No brands are listed yet. Please check back soon.');
   }
   return h('ul', { class: 'cards', 'aria-label': 'Brands' },
-    brands.map((b) =>
+    brands.map((b, i) =>
       h('li', { class: 'card' },
-        logo(b, 'md'),
-        h('h2', null, b.name),
-        h('p', { class: 'muted' }, b.description || 'Contact numbers published by this brand.'),
-        h('a', { class: 'btn btn-wa btn-block', href: `/brand/${b.slug}`, 'data-link': '', 'aria-label': `View WhatsApp Contacts for ${b.name}` },
-          'View WhatsApp Contacts', icon('arrow-right', 16)))));
+        logo(b, 'md', i < 8),
+        h('div', { class: 'card-body' },
+          h('h2', null, b.name),
+          h('p', { class: 'muted' }, b.description || 'Contact numbers published by this brand.')),
+        h('a', { class: 'btn btn-wa', href: `/brand/${b.slug}`, 'data-link': '', 'aria-label': `View WhatsApp Contacts for ${b.name}` },
+          h('span', { class: 'btn-text' }, 'View WhatsApp Contacts'), icon('arrow-right', 16)))));
 }
 
 function renderHome(brands) {
@@ -90,7 +91,8 @@ function renderHome(brands) {
       e.preventDefault();
       ui.query = input.value.trim();
       draw();
-      document.getElementById('brands')?.scrollIntoView({ behavior: 'smooth' });
+      const top = document.getElementById('brands')?.getBoundingClientRect().top ?? 0;
+      if (top > window.innerHeight * 0.6) document.getElementById('brands').scrollIntoView({ behavior: 'smooth' });
     },
   },
   h('label', { class: 'search-field', for: 'brand-search' }, h('span', { class: 'sr-only' }, 'Search brands'), icon('search', 20), input),
