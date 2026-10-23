@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Admin - %SITE_NAME%</title>
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <meta name="color-scheme" content="light">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="/css/styles.css">
+  <link rel="stylesheet" href="/css/admin.css">
+  <script src="/js/config.js"></script>
+  <script src="/vendor/supabase.js"></script>
+  <script type="module" src="/js/admin.js"></script>
+</head>
+<body class="admin">
+  <a class="skip" href="#admin">Skip to content</a>
+  <div class="shell" id="shell" data-auth="false" data-name="%SITE_NAME%">
+    <header class="topbar">
+      <a class="top-brand" href="/admin/" id="top-brand"></a>
+      <button class="menu-btn" id="menu-btn" type="button" aria-label="Toggle menu" aria-expanded="false" aria-controls="sidebar"></button>
+      <div class="top-user" id="topuser"></div>
+    </header>
+    <aside class="sidebar" id="sidebar">
+      <a class="side-brand" href="/admin/" id="side-brand"></a>
+      <nav id="sidenav" aria-label="Admin"></nav>
+    </aside>
+    <div class="content">
+      <div class="status-wrap"><div id="status" class="status" aria-live="polite" aria-atomic="true" hidden></div></div>
+      <main id="admin" tabindex="-1">
+        <noscript><p class="notice">The admin panel needs JavaScript.</p></noscript>
+        <p class="loading">Loading&hellip;</p>
+      </main>
+    </div>
+  </div>
+</body>
+</html>
