@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
   normalizePhone, whatsappLink, formatPhone, slugify, validateSlug, normalizeBackup, backupInfo,
-  matchRoute, groupContacts, initials,
+  matchRoute, groupContacts, initials, filterBrands,
 } from '../src/js/lib.js';
 
 test('normalizePhone accepts international formats and strips punctuation', () => {
@@ -74,4 +74,19 @@ test('groupContacts keeps category order, sorts, and drops empty groups', () => 
 test('initials', () => {
   assert.equal(initials('Sample Brand One'), 'SB');
   assert.equal(initials(''), '?');
+});
+
+test('filterBrands matches every word in name or description, case-insensitively', () => {
+  const brands = [
+    { name: 'Alpha Games', description: 'Sports and casino' },
+    { name: 'Beta Bet', description: null },
+    { name: 'Gamma', description: 'Live casino tables' },
+  ];
+  assert.equal(filterBrands(brands, '').length, 3);
+  assert.equal(filterBrands(brands, '   ').length, 3);
+  assert.deepEqual(filterBrands(brands, 'ALPHA').map((b) => b.name), ['Alpha Games']);
+  assert.deepEqual(filterBrands(brands, 'casino').map((b) => b.name), ['Alpha Games', 'Gamma']);
+  assert.deepEqual(filterBrands(brands, 'live casino').map((b) => b.name), ['Gamma']);
+  assert.deepEqual(filterBrands(brands, 'beta').map((b) => b.name), ['Beta Bet']);
+  assert.equal(filterBrands(brands, 'nomatch').length, 0);
 });

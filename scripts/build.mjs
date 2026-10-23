@@ -46,7 +46,7 @@ export async function build({ outDir = join(root, 'dist'), env = { ...loadEnv(),
   const supabaseUrl = (env.SUPABASE_URL || '').replace(/\/+$/, '');
   const supabaseAnonKey = env.SUPABASE_ANON_KEY || '';
   const siteUrl = (env.SITE_URL || 'http://localhost:8080').replace(/\/+$/, '');
-  const siteName = env.SITE_NAME || 'Contact Hub';
+  const siteName = env.SITE_NAME || 'WhatsApp Contact Hub';
 
   if (!/^https?:\/\//.test(siteUrl)) throw new Error('SITE_URL must start with http:// or https://');
   if (supabaseUrl && !/^https?:\/\//.test(supabaseUrl)) throw new Error('SUPABASE_URL must start with https://');

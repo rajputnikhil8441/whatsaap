@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, readFileSync, existsSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, existsSync, rmSync, readdirSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { build, assertPublicKey } from '../scripts/build.mjs';
@@ -41,6 +41,27 @@ test('build refuses a service-role key and a bad SITE_URL', async () => {
   try {
     await assert.rejects(build({ outDir, env: { SUPABASE_URL: 'https://a.supabase.co', SUPABASE_ANON_KEY: jwt('service_role') }, log() {} }), /service_role/);
     await assert.rejects(build({ outDir, env: { SITE_URL: 'ftp://x' }, log() {} }), /SITE_URL/);
+  } finally {
+    rmSync(outDir, { recursive: true, force: true });
+  }
+});
+
+test('public pages expose no admin entry point and default branding is exact', async () => {
+  const outDir = mkdtempSync(join(tmpdir(), 'hub-'));
+  try {
+    await build({ outDir, env: {}, log() {} });
+    const index = readFileSync(join(outDir, 'index.html'), 'utf8');
+    assert.match(index, /WhatsApp Contact Hub/);
+    // Public HTML and the scripts it loads must never link to /admin or mention signing in.
+    const publicFiles = [join(outDir, 'index.html'), ...['public.js', 'api.js', 'dom.js', 'icons.js', 'lib.js', 'sample-data.js'].map((f) => join(outDir, 'js', f))];
+    for (const f of publicFiles) {
+      const text = readFileSync(f, 'utf8');
+      assert.doesNotMatch(text, /\/admin|admin login|sign in|log in/i, f);
+      // icons.js legitimately defines a shared "dashboard" glyph; no other public file may mention one.
+      if (!f.endsWith('icons.js')) assert.doesNotMatch(text, /dashboard/i, f);
+    }
+    // The admin shell stays reachable at /admin and is marked noindex.
+    assert.ok(readdirSync(join(outDir, 'admin')).includes('index.html'));
   } finally {
     rmSync(outDir, { recursive: true, force: true });
   }
