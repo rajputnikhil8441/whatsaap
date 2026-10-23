@@ -121,6 +121,30 @@ async function removeLogoFile(path) {
 }
 
 // ---------------------------------------------------------------- auth + shell
+const loadingEl = (text) => h('p', { class: 'loading' }, h('span', { class: 'spinner', 'aria-hidden': 'true' }), text);
+
+function emptyState(iconName, title, text, action) {
+  return h('div', { class: 'empty-state' }, icon(iconName, 32), h('strong', null, title), h('span', null, text), action);
+}
+
+/** Accessible modal confirmation (native <dialog>: focus trap, Esc to cancel). Resolves true on confirm. */
+function confirmDialog({ title, message, confirmLabel = 'Delete', danger = true }) {
+  return new Promise((resolve) => {
+    const dlg = h('dialog', { class: 'dialog', 'aria-labelledby': 'dlg-title', 'aria-describedby': 'dlg-msg' },
+      danger && h('div', { class: 'warn' }, icon('alert', 22)),
+      h('h2', { id: 'dlg-title' }, title),
+      h('p', { id: 'dlg-msg' }, message),
+      h('form', { method: 'dialog' },
+        h('div', { class: 'actions' },
+          h('button', { class: 'btn btn-secondary', value: 'cancel', autofocus: true }, 'Cancel'),
+          h('button', { class: `btn${danger ? ' btn-danger' : ''}`, value: 'ok' }, confirmLabel))));
+    if (typeof dlg.showModal !== 'function') { resolve(window.confirm(message)); return; }
+    dlg.addEventListener('close', () => { const ok = dlg.returnValue === 'ok'; dlg.remove(); resolve(ok); });
+    document.body.append(dlg);
+    dlg.showModal();
+  });
+}
+
 const shell = document.getElementById('shell');
 const sidebar = document.getElementById('sidebar');
 const menuBtn = document.getElementById('menu-btn');
@@ -134,7 +158,7 @@ function setMenu(open) {
 }
 
 /** Sidebar, top bar and mobile menu; shown only while signed in. */
-function renderNav() {
+function renderNav(active = '') {
   shell.dataset.auth = user ? 'true' : 'false';
   setMenu(false);
   if (!user) { nav.replaceChildren(); document.getElementById('topuser').replaceChildren(); return; }
@@ -142,8 +166,12 @@ function renderNav() {
   document.getElementById('side-brand').replaceChildren(...brandBlock());
   menuBtn.replaceChildren(icon('menu', 22));
   document.getElementById('topuser').replaceChildren(h('span', { class: 'avatar' }, icon('user', 18)), h('span', null, user.email));
+  const link = (href, key, label, ic) =>
+    h('a', { class: 'side-link', href, 'aria-current': active === key ? 'page' : null }, icon(ic, 18), label);
   nav.replaceChildren(
-    h('a', { class: 'side-link', href: '#/', 'aria-current': 'page' }, icon('grid', 18), 'Brands'),
+    link('#/', 'dashboard', 'Dashboard', 'dashboard'),
+    link('#/brands', 'brands', 'Brands', 'grid'),
+    link('#/brand/new', 'new', 'Add Brand', 'plus'),
     h('a', { class: 'side-link', href: '/', target: '_blank', rel: 'noopener' }, icon('external', 18), 'Public site'),
     h('button', { class: 'side-link', type: 'button', onclick: signOut }, icon('logout', 18), 'Sign out'),
     h('p', { class: 'side-user' }, user.email));
@@ -204,10 +232,52 @@ function renderNotConfigured() {
     h('p', null, 'Set SUPABASE_URL and SUPABASE_ANON_KEY (see .env.example and the README), then rebuild the site.')));
 }
 
+// ---------------------------------------------------------------- dashboard
+async function renderDashboard() {
+  renderNav('dashboard');
+  root.replaceChildren(loadingEl('Loading dashboard\u2026'));
+  const [b, c] = await Promise.all([
+    sb.from('brands').select('id, name, slug, logo_path, is_active, updated_at, contacts(count)').order('updated_at', { ascending: false }),
+    sb.from('contacts').select('id, is_active'),
+  ]);
+  if (b.error || c.error) {
+    notify('error', friendly(b.error || c.error));
+    root.replaceChildren(emptyState('alert', 'Could not load the dashboard', 'Check your connection and try again.'));
+    return;
+  }
+  const brands = b.data;
+  const contacts = c.data;
+  const stats = [
+    ['grid', 'Total Brands', brands.length, ''],
+    ['check', 'Active Brands', brands.filter((x) => x.is_active).length, ''],
+    ['phone', 'Total Contacts', contacts.length, 'gold'],
+    ['check', 'Active Contacts', contacts.filter((x) => x.is_active).length, 'gold'],
+  ];
+  const recent = brands.slice(0, 5);
+  root.replaceChildren(
+    h('div', { class: 'page-head' },
+      h('div', null, h('h1', null, 'Dashboard'), h('p', { class: 'muted' }, 'A quick look at the brands and contacts you manage.')),
+      h('a', { class: 'btn', href: '#/brand/new' }, icon('plus', 18), 'Add Brand')),
+    h('ul', { class: 'stats', 'aria-label': 'Summary' }, stats.map(([ic, label, n, tone]) =>
+      h('li', { class: 'stat' }, h('span', { class: `tile ${tone}` }, icon(ic, 22)), h('div', null, h('span', { class: 'num' }, n), h('span', { class: 'lbl' }, label))))),
+    h('section', { class: 'panel', 'aria-labelledby': 'recent-h' },
+      h('div', { class: 'panel-head' }, h('h2', { id: 'recent-h' }, 'Recent Brands'), h('a', { href: '#/brands', class: 'btn btn-secondary btn-sm' }, 'View all brands')),
+      recent.length === 0
+        ? emptyState('grid', 'No brands yet', 'Add your first brand to get started.')
+        : h('ul', { class: 'table' },
+            h('li', { class: 'table-head row-recent', 'aria-hidden': 'true' }, h('span', null, 'Logo'), h('span', null, 'Name'), h('span', null, 'Slug'), h('span', null, 'Status')),
+            recent.map((x) => h('li', { class: 'row row-recent' },
+              h('div', { class: 'cell-logo' }, thumb(x)),
+              h('div', { class: 'cell-name' }, h('strong', null, x.name), h('span', { class: 'slug-sub' }, `/brand/${x.slug}`)),
+              h('div', { class: 'cell-slug' }, `/brand/${x.slug}`),
+              h('div', { class: 'cell-status' }, h('span', { class: `pill static ${x.is_active ? 'on' : 'off'}` }, x.is_active ? 'Active' : 'Inactive')))))),
+  );
+}
+
 // ---------------------------------------------------------------- brands list
 async function renderBrands() {
-  renderNav();
-  root.replaceChildren(h('p', { class: 'loading' }, 'Loading brands…'));
+  renderNav('brands');
+  root.replaceChildren(loadingEl('Loading brands…'));
   const { data: brands, error } = await sb.from('brands').select('*, contacts(count)')
     .order('sort_order').order('name');
   if (error) { notify('error', friendly(error)); root.replaceChildren(h('p', { class: 'empty' }, 'Could not load brands.')); return; }
@@ -235,7 +305,7 @@ async function renderBrands() {
 
   async function remove(b, btn) {
     const n = b.contacts?.[0]?.count ?? 0;
-    if (!confirm(`Delete "${b.name}" and its ${n} contact number(s)? This cannot be undone.`)) return;
+    if (!(await confirmDialog({ title: 'Delete brand?', message: `Delete "${b.name}" and its ${n} contact number(s)? This cannot be undone.`, confirmLabel: 'Delete brand' }))) return;
     await run(btn, 'Deleting', async () => {
       const { data, error: e } = await sb.from('brands').delete().eq('id', b.id).select('id');
       if (e) throw e;
@@ -252,7 +322,7 @@ async function renderBrands() {
       h('div', null, h('h1', null, 'Brands'), h('p', { class: 'muted' }, 'Manage your brands and their contact information.')),
       h('a', { class: 'btn', href: '#/brand/new' }, icon('plus', 18), 'Add Brand')),
     brands.length === 0
-      ? h('p', { class: 'empty' }, 'No brands yet. Add your first brand.')
+      ? emptyState('grid', 'No brands yet', 'Add your first brand to publish its contact numbers.', h('a', { class: 'btn btn-sm', href: '#/brand/new' }, icon('plus', 16), 'Add Brand'))
       : h('ul', { class: 'table' },
           h('li', { class: 'table-head', 'aria-hidden': 'true' },
             h('span', null, 'Logo'), h('span', null, 'Brand Name'), h('span', null, 'Slug'), h('span', null, 'Status'), h('span', null, 'Actions')),
@@ -273,11 +343,11 @@ async function renderBrands() {
 
 // ---------------------------------------------------------------- brand editor
 async function renderBrandEditor(id) {
-  renderNav();
+  renderNav(id === 'new' ? 'new' : 'brands');
   let brand = { name: '', slug: '', description: '', logo_path: null, backup_type: 'none', backup_value: '', is_active: true };
   const isNew = id === 'new';
   if (!isNew) {
-    root.replaceChildren(h('p', { class: 'loading' }, 'Loading brand…'));
+    root.replaceChildren(loadingEl('Loading brand…'));
     const { data, error } = await sb.from('brands').select('*').eq('id', id).maybeSingle();
     if (error || !data) {
       notify('error', error ? friendly(error) : 'That brand does not exist.');
@@ -345,7 +415,7 @@ async function renderBrandEditor(id) {
       else if (file && file.size > MAX_LOGO_BYTES) errors.logo = 'Logo must be 1 MB or smaller.';
       if (!showErrors(form, errors)) return;
       if (!isNew && slugV !== brand.slug &&
-          !confirm(`Changing the slug changes the public URL from /brand/${brand.slug} to /brand/${slugV}. Old links will stop working. Continue?`)) return;
+          !(await confirmDialog({ title: 'Change public URL?', message: `Changing the slug changes the public URL from /brand/${brand.slug} to /brand/${slugV}. Old links will stop working.`, confirmLabel: 'Change URL', danger: false }))) return;
 
       await run(submit, 'Saving', async () => {
         let newLogo = null;
@@ -388,7 +458,7 @@ async function renderBrandEditor(id) {
   },
   h('div', { class: 'page-head' },
     h('div', null,
-      h('a', { class: 'back-link', href: '#/' }, icon('arrow-left', 16), 'All brands'),
+      h('a', { class: 'back-link', href: '#/brands' }, icon('arrow-left', 16), 'All brands'),
       h('h1', null, isNew ? 'New brand' : `Edit ${brand.name}`)),
     !isNew && h('a', { class: 'btn btn-secondary btn-sm', href: `/brand/${brand.slug}`, target: '_blank', rel: 'noopener' }, 'View public page', icon('external', 16))),
   h('div', { class: 'row-fields' }, field('Brand name', name), field('URL slug', slug, 'Public address: /brand/your-slug')),
@@ -454,7 +524,7 @@ function contactsPanel(brand) {
   }
 
   async function remove(c, btn) {
-    if (!confirm(`Delete ${formatPhone(c.phone)} (${c.label || categoryLabel(c.category)})? This cannot be undone.`)) return;
+    if (!(await confirmDialog({ title: 'Delete contact?', message: `Delete ${formatPhone(c.phone)} (${c.label || categoryLabel(c.category)})? This cannot be undone.`, confirmLabel: 'Delete contact' }))) return;
     await run(btn, 'Deleting', async () => {
       const { data, error } = await sb.from('contacts').delete().eq('id', c.id).select('id');
       if (error) throw error;
@@ -519,7 +589,7 @@ function contactsPanel(brand) {
     const groups = groupContacts(contacts);
     box.replaceChildren(...[
       h('div', { class: 'panel-head' }, h('h2', { id: 'contacts-h' }, 'WhatsApp contacts')),
-      groups.length === 0 && h('p', { class: 'empty' }, 'No contacts yet. Add one below.'),
+      groups.length === 0 && emptyState('phone', 'No contacts yet', 'Add the first WhatsApp number for this brand below.'),
       groups.map((g) => [
         h('h3', { class: 'cat-title' }, g.label),
         h('ul', { class: 'table' }, g.contacts.map((c, i) => {
@@ -539,7 +609,7 @@ function contactsPanel(brand) {
     ].flat(Infinity).filter(Boolean));
   }
 
-  box.replaceChildren(h('p', { class: 'loading' }, 'Loading contacts…'));
+  box.replaceChildren(loadingEl('Loading contacts…'));
   reload();
   return box;
 }
@@ -547,9 +617,11 @@ function contactsPanel(brand) {
 // ---------------------------------------------------------------- routing
 async function route() {
   if (!user) return renderLogin();
-  const m = location.hash.match(/^#\/brand\/([\w-]+)$/);
+  const hash = location.hash;
+  const m = hash.match(/^#\/brand\/([\w-]+)$/);
   if (m) await renderBrandEditor(m[1]);
-  else await renderBrands();
+  else if (hash === '#/brands') await renderBrands();
+  else await renderDashboard();
 }
 
 async function init() {

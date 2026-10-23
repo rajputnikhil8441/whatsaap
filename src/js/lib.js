@@ -2,10 +2,10 @@
 // No DOM or network access in this file.
 
 export const CATEGORIES = [
-  { value: 'customer_support', label: 'Customer Support' },
-  { value: 'deposits', label: 'Deposits' },
-  { value: 'withdrawals', label: 'Withdrawals' },
-  { value: 'general', label: 'General Enquiries' },
+  { value: 'customer_support', label: 'Customer Support', hint: 'Help with accounts and general questions' },
+  { value: 'deposits', label: 'Deposits', hint: 'Questions about deposits' },
+  { value: 'withdrawals', label: 'Withdrawals', hint: 'Questions about withdrawals' },
+  { value: 'general', label: 'General Enquiries', hint: 'Other questions and enquiries' },
 ];
 
 export const categoryLabel = (value) =>
@@ -111,4 +111,14 @@ export function groupContacts(contacts) {
       .filter((c) => c.category === cat.value)
       .sort((a, b) => a.sort_order - b.sort_order),
   })).filter((g) => g.contacts.length > 0);
+}
+
+/** Case-insensitive brand search: every word must appear in the name or description. */
+export function filterBrands(brands, query) {
+  const words = String(query ?? '').toLowerCase().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return brands;
+  return brands.filter((b) => {
+    const haystack = `${b.name} ${b.description ?? ''}`.toLowerCase();
+    return words.every((w) => haystack.includes(w));
+  });
 }

@@ -1,6 +1,6 @@
 # Multi-Brand Customer Contact Hub
 
-A minimal, mobile-first directory where customers pick a gaming brand and find that brand's customer-support WhatsApp numbers (Customer Support, Deposits, Withdrawals, General Enquiries), with an optional email/Telegram backup.
+A premium dark, mobile-first directory where customers pick a gaming brand and find that brand's customer-support WhatsApp numbers (Customer Support, Deposits, Withdrawals, General Enquiries), with an optional email/Telegram backup.
 
 - **Public site:** static HTML/CSS/vanilla JS, no framework, no runtime dependencies.
 - **Data:** Supabase Postgres, with Row Level Security. Visitors can only read *active* brands and contacts.
@@ -8,6 +8,13 @@ A minimal, mobile-first directory where customers pick a gaming brand and find t
 - **Content edits are live immediately.** Public pages read from Supabase on every load, so saving in the admin needs no commit or redeploy.
 
 This is an independent contact directory. It is not affiliated with or endorsed by WhatsApp or Meta, and it uses no WhatsApp logos or branding.
+
+## Design system
+
+One dark theme shared by the public site and the admin panel (`src/css/styles.css` tokens, `src/css/admin.css` for the admin):
+near-black surfaces (`#07110E` / `#0C1914` / `#10221A`), emerald (`#00B86B`) and WhatsApp-style green (`#25D366`) for actions and active states, and a muted gold (`#D6B46A`) used sparingly for small accents. Text and button colours were checked for WCAG AA contrast (buttons use dark text on the bright greens). The font stack is `Inter, Manrope, system-ui…`; no web fonts are downloaded, which keeps the strict CSP and fast loads.
+
+The public site has no link to the admin panel. `/admin` stays reachable only by typing the address, and access is enforced by Supabase Auth, the `admin_users` allowlist and Row Level Security, not by hiding the link.
 
 ## Project layout
 
@@ -70,7 +77,7 @@ Copy `.env.example` to `.env` for local builds (it is git-ignored). On your host
 | `SUPABASE_URL` | Project URL |
 | `SUPABASE_ANON_KEY` | Publishable/anon key (public) |
 | `SITE_URL` | Public site URL, used for canonical links, Open Graph and `sitemap.xml` |
-| `SITE_NAME` | Header and page-title name |
+| `SITE_NAME` | Header and page-title name (defaults to `WhatsApp Contact Hub`; if you set it on your host, keep that exact value) |
 
 ```bash
 npm run build    # writes dist/
