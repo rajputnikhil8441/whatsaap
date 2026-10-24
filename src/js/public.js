@@ -199,6 +199,7 @@ function renderBrand(brand) {
     for (const e of entries) {
       const show = ui.cat === 'all' || ui.cat === e.cat;
       e.node.hidden = !show;
+      e.node.classList.toggle('is-lead', show && visible === 0); // first visible contact gets the stronger glow
       if (show) visible += 1;
     }
     for (const b of buttons) b.setAttribute('aria-pressed', String(b.dataset.cat === ui.cat));

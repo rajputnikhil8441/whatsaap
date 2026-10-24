@@ -200,6 +200,10 @@ a { color: var(--emerald); }
 .copy { border-top: 1px solid var(--border); padding-top: 16px; padding-bottom: 24px; text-align: center; font-size: .82rem; }
 
 /* ---------- brand page (compact: the WhatsApp contact must be visible on the first screen) ---------- */
+/* Brand-page theme: near-black/emerald surfaces, gaming-green actions, restrained gold, fine lattice texture. */
+.brand-hero, .contact-card, .note {
+  --lattice: repeating-linear-gradient(45deg, rgba(214, 180, 106, .05) 0 1px, transparent 1px 16px), repeating-linear-gradient(-45deg, rgba(214, 180, 106, .05) 0 1px, transparent 1px 16px);
+}
 .crumb-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 36px; margin: 8px 0; }
 .breadcrumb { flex: 1; min-width: 0; }
 .breadcrumb ol { list-style: none; display: flex; flex-wrap: nowrap; align-items: center; gap: 4px; margin: 0; padding: 0; font-size: .82rem; color: var(--muted); overflow: hidden; }
@@ -209,23 +213,26 @@ a { color: var(--emerald); }
 .breadcrumb a:hover { color: var(--wa); }
 .breadcrumb [aria-current] { color: var(--text); font-weight: 600; }
 .brand-hero {
-  position: relative; overflow: hidden; display: flex; gap: 12px; align-items: center; padding: 12px; border-radius: 16px; border: 1px solid var(--border);
+  position: relative; overflow: hidden; display: flex; gap: 12px; align-items: center; padding: 12px; border-radius: 16px; border: 1px solid rgba(37, 211, 102, .28);
   background:
-    radial-gradient(360px 160px at 100% 0, rgba(214, 180, 106, .14), transparent 70%),
-    radial-gradient(360px 160px at 0 100%, rgba(0, 184, 107, .16), transparent 70%),
-    repeating-linear-gradient(135deg, rgba(214, 180, 106, .045) 0 1px, transparent 1px 14px),
-    var(--card);
-  box-shadow: var(--shadow);
+    radial-gradient(320px 150px at 100% 0, rgba(214, 180, 106, .17), transparent 70%),
+    radial-gradient(320px 150px at 0 100%, rgba(0, 184, 107, .24), transparent 70%),
+    var(--lattice),
+    linear-gradient(180deg, #11261c, var(--card));
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .45), inset 0 1px 0 rgba(255, 255, 255, .04);
 }
-.brand-hero::before { content: ''; position: absolute; left: 0; top: 0; width: 100%; height: 2px; background: linear-gradient(90deg, var(--gold), transparent 60%); opacity: .75; }
+.brand-hero::before { content: ''; position: absolute; left: 0; top: 0; width: 100%; height: 2px; background: linear-gradient(90deg, var(--gold), var(--wa) 55%, transparent); opacity: .85; }
+.brand-hero::after { content: ''; position: absolute; right: 8px; bottom: 8px; width: 14px; height: 14px; border-right: 1.5px solid rgba(214, 180, 106, .6); border-bottom: 1.5px solid rgba(214, 180, 106, .6); border-bottom-right-radius: 4px; pointer-events: none; }
+.brand-hero .logo { border-color: rgba(255, 255, 255, .14); box-shadow: 0 0 0 2px rgba(0, 184, 107, .6), 0 0 12px rgba(37, 211, 102, .4); }
 .brand-hero > div { min-width: 0; }
-.brand-hero h1 { font-size: 1.3rem; line-height: 1.2; overflow-wrap: anywhere; }
+.brand-hero h1 { font-size: 1.3rem; line-height: 1.2; font-weight: 800; letter-spacing: -.01em; overflow-wrap: anywhere; text-shadow: 0 0 18px rgba(37, 211, 102, .3); }
 .brand-hero .muted { margin-top: 2px; font-size: .86rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-.brand-hero .tag { display: none; margin: 0 0 4px; color: var(--gold); font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.brand-hero .tag { display: none; align-items: center; gap: 8px; margin: 0 0 4px; color: var(--gold); font-size: .7rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.brand-hero .tag::before { content: ''; width: 6px; height: 6px; background: var(--gold); transform: rotate(45deg); flex: none; }
 @media (min-width: 640px) {
   .brand-hero { gap: 16px; padding: 16px 18px; }
   .brand-hero h1 { font-size: 1.6rem; }
-  .brand-hero .tag { display: block; }
+  .brand-hero .tag { display: flex; }
 }
 .layout { display: grid; gap: 10px; margin-top: 10px; align-items: start; }
 @media (min-width: 900px) { .layout { grid-template-columns: 250px 1fr; gap: 18px; margin-top: 16px; } }
@@ -236,7 +243,7 @@ a { color: var(--emerald); }
   background: var(--card); color: var(--muted); border: 1px solid var(--border); border-radius: 12px; font: inherit; font-size: .88rem; font-weight: 600; cursor: pointer;
 }
 .cat:hover { color: var(--text); border-color: var(--border-strong); }
-.cat[aria-pressed=true] { color: var(--text); border-color: var(--wa); background: rgba(37, 211, 102, .1); }
+.cat[aria-pressed=true] { color: var(--text); border-color: var(--wa); background: rgba(37, 211, 102, .12); box-shadow: 0 0 14px rgba(37, 211, 102, .22); }
 .cat .n { min-width: 24px; padding: 1px 7px; border-radius: 999px; background: var(--card-2); color: var(--muted); font-size: .75rem; text-align: center; }
 .cat[aria-pressed=true] .n { background: var(--wa); color: var(--on-accent); }
 @media (min-width: 900px) {
@@ -252,23 +259,37 @@ a { color: var(--emerald); }
 }
 .contact-cards { list-style: none; margin: 0 0 14px; padding: 0; display: grid; gap: 10px; }
 .contact-card {
-  position: relative; overflow: hidden; display: grid; gap: 0 12px; align-items: center; padding: 12px; border: 1px solid var(--border); border-radius: 14px;
-  background: repeating-linear-gradient(135deg, rgba(214, 180, 106, .035) 0 1px, transparent 1px 12px), linear-gradient(180deg, var(--card-2), var(--card));
+  position: relative; overflow: hidden; display: grid; gap: 0 12px; align-items: center; padding: 12px; border: 1px solid transparent; border-radius: 14px;
+  /* fill (lattice + gradient) clipped to the padding box, plus a gradient border painted behind it */
+  background-image: var(--lattice), linear-gradient(180deg, #153326, var(--card)), linear-gradient(135deg, rgba(37, 211, 102, .55), rgba(214, 180, 106, .3) 45%, rgba(37, 211, 102, .1));
+  background-origin: padding-box, padding-box, padding-box, border-box;
+  background-clip: padding-box, padding-box, padding-box, border-box;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .4), inset 0 1px 0 rgba(255, 255, 255, .04);
   grid-template-columns: 40px minmax(0, 1fr); grid-template-areas: "tile text" "tile value" "act act";
 }
-.contact-card::before { content: ''; position: absolute; left: 0; top: 0; width: 36px; height: 2px; background: var(--gold); opacity: .85; }
+.contact-card::before { content: ''; position: absolute; left: 0; top: 10px; bottom: 10px; width: 3px; border-radius: 0 3px 3px 0; background: linear-gradient(180deg, var(--wa), var(--emerald)); box-shadow: 0 0 10px rgba(37, 211, 102, .6); }
+.contact-card::after { content: ''; position: absolute; right: 0; top: 0; width: 32px; height: 2px; background: var(--gold); opacity: .85; }
+.contact-card.is-lead { box-shadow: 0 10px 28px rgba(0, 0, 0, .45), 0 0 0 1px rgba(37, 211, 102, .3), 0 0 26px rgba(37, 211, 102, .16), inset 0 1px 0 rgba(255, 255, 255, .05); }
 .contact-card[hidden] { display: none; }
-.contact-card:hover { border-color: rgba(37, 211, 102, .45); }
+.contact-card:hover { box-shadow: 0 10px 26px rgba(0, 0, 0, .45), 0 0 0 1px rgba(37, 211, 102, .4), 0 0 22px rgba(37, 211, 102, .14), inset 0 1px 0 rgba(255, 255, 255, .05); }
 .contact-card .tile { grid-area: tile; width: 40px; height: 40px; border-radius: 12px; align-self: start; }
+.contact-card .tile:not(.gold) { background: radial-gradient(circle at 30% 25%, rgba(37, 211, 102, .3), rgba(0, 184, 107, .08)); border-color: rgba(37, 211, 102, .5); box-shadow: 0 0 12px rgba(37, 211, 102, .2); }
 .contact-text { grid-area: text; min-width: 0; }
 .contact-text strong { display: block; line-height: 1.25; }
 .contact-text .sub { display: block; color: var(--muted); font-size: .8rem; line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .contact-text .sub.hint { display: none; }
-.value { grid-area: value; display: flex; align-items: center; gap: 8px; font-size: 1.2rem; font-weight: 800; letter-spacing: .01em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; min-width: 0; }
+.value { grid-area: value; display: flex; align-items: center; gap: 8px; font-size: 1.2rem; font-weight: 800; letter-spacing: .01em; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; min-width: 0; color: #fff; text-shadow: 0 0 14px rgba(37, 211, 102, .3); }
 .value svg { color: var(--wa); }
-.value a { color: var(--text); text-underline-offset: 3px; font-size: 1rem; }
+.value a { color: var(--text); text-underline-offset: 3px; font-size: 1rem; text-shadow: none; }
 .contact-card > .btn, .contact-card > .btn-group { grid-area: act; margin-top: 10px; }
 .contact-card > .btn { width: 100%; min-height: 48px; font-size: .95rem; }
+/* the WhatsApp CTA is the strongest element: bright gaming-green with a glossy top edge and soft glow */
+.contact-card > .btn-wa {
+  font-weight: 800; background: linear-gradient(180deg, #52f28e 0%, var(--wa) 42%, var(--emerald) 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 6px 18px rgba(0, 184, 107, .35), 0 0 22px rgba(37, 211, 102, .22);
+}
+.contact-card > .btn-wa:hover { background: linear-gradient(180deg, #6bf7a0 0%, #3ee97f 42%, #0fcb78 100%); box-shadow: inset 0 1px 0 rgba(255, 255, 255, .4), 0 8px 24px rgba(0, 184, 107, .5), 0 0 30px rgba(37, 211, 102, .35); }
+.contact-card .btn:focus-visible { outline-offset: 3px; }
 .contact-card .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
 .contact-card .btn-group .btn { flex: 1; min-height: 44px; }
 @media (min-width: 720px) {
@@ -280,7 +301,7 @@ a { color: var(--emerald); }
   .contact-card > .btn { width: auto; min-height: 44px; }
   .contact-card .btn-group .btn { flex: none; min-height: 44px; }
 }
-.note { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border: 1px solid rgba(214, 180, 106, .3); background: rgba(214, 180, 106, .06); border-radius: var(--radius); }
+.note { display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border: 1px solid rgba(214, 180, 106, .3); background-color: rgba(214, 180, 106, .06); background-image: var(--lattice); border-radius: var(--radius); }
 .note .tile { width: 40px; height: 40px; }
 .note h2 { font-size: .95rem; color: var(--gold); }
 .note p { margin: 2px 0 0; color: var(--muted); font-size: .85rem; }
