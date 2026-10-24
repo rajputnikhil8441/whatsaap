@@ -13,7 +13,7 @@ function logo(brand, size, eager = false) {
   const url = logoUrl(brand);
   const fallback = () => h('div', { class: `logo logo-${size} logo-fallback`, 'aria-hidden': 'true' }, initials(brand.name));
   if (!url) return fallback();
-  const px = size === 'lg' ? 88 : 64;
+  const px = 64;  // CSS sets the real size (56px on phones); attributes just reserve space
   const img = h('img', {
     class: `logo logo-${size}`, src: url, alt: `${brand.name} logo`, width: px, height: px,
     loading: size === 'lg' || eager ? 'eager' : 'lazy', decoding: 'async',
@@ -152,7 +152,7 @@ function renderBrand(brand) {
       cat: g.value,
       node: h('li', { class: 'contact-card', dataset: { cat: g.value } },
         h('span', { class: 'tile' }, icon(CATEGORY_ICONS[g.value], 22)),
-        h('div', { class: 'contact-text' }, h('strong', null, g.label), h('span', { class: 'sub' }, c.label || g.hint)),
+        h('div', { class: 'contact-text' }, h('strong', null, g.label), h('span', { class: c.label ? 'sub' : 'sub hint' }, c.label || g.hint)),
         h('div', { class: 'value' }, icon('chat', 18), formatPhone(c.phone)),
         h('a', {
           class: 'btn btn-wa', href: whatsappLink(c.phone), target: '_blank', rel: 'noopener noreferrer',
@@ -170,7 +170,7 @@ function renderBrand(brand) {
       cat: 'backup',
       node: h('li', { class: 'contact-card', dataset: { cat: 'backup' } },
         h('span', { class: 'tile gold' }, icon(isMail ? 'mail' : 'send', 22)),
-        h('div', { class: 'contact-text' }, h('strong', null, isMail ? 'Email Support' : 'Telegram Support'), h('span', { class: 'sub' }, 'Backup contact channel')),
+        h('div', { class: 'contact-text' }, h('strong', null, isMail ? 'Email Support' : 'Telegram Support'), h('span', { class: 'sub hint' }, 'Backup contact channel')),
         h('div', { class: 'value' }, h('a', { href: backup.href, rel: 'noopener noreferrer', target: isMail ? null : '_blank' }, backup.text)),
         h('div', { class: 'btn-group' },
           h('a', {
@@ -221,11 +221,13 @@ function renderBrand(brand) {
 
   app.replaceChildren(...[
     sampleBanner(),
-    h('nav', { class: 'breadcrumb', 'aria-label': 'Breadcrumb' },
-      h('ol', null,
-        h('li', null, h('a', { href: '/', 'data-link': '' }, 'Home')), h('li', { 'aria-hidden': 'true' }, icon('chevron', 14)),
-        h('li', null, h('a', { href: '/#brands', 'data-link': '' }, 'Brands')), h('li', { 'aria-hidden': 'true' }, icon('chevron', 14)),
-        h('li', { 'aria-current': 'page' }, brand.name))),
+    h('div', { class: 'crumb-row' },
+      h('nav', { class: 'breadcrumb', 'aria-label': 'Breadcrumb' },
+        h('ol', null,
+          h('li', null, h('a', { href: '/', 'data-link': '' }, 'Home')), h('li', { 'aria-hidden': 'true' }, icon('chevron', 14)),
+          h('li', null, h('a', { href: '/#brands', 'data-link': '' }, 'Brands')), h('li', { 'aria-hidden': 'true' }, icon('chevron', 14)),
+          h('li', { 'aria-current': 'page' }, brand.name))),
+      share),
     h('header', { class: 'brand-hero' },
       logo(brand, 'lg'),
       h('div', null,
@@ -235,11 +237,10 @@ function renderBrand(brand) {
     entries.length === 0
       ? h('p', { class: 'empty', style: null }, 'No contact numbers are available for this brand right now.')
       : h('div', { class: 'layout' },
-          h('nav', { class: 'cats', 'aria-label': 'Contact categories' }, buttons),
+          entries.length > 1 && h('nav', { class: 'cats', 'aria-label': 'Contact categories' }, buttons),
           h('section', { 'aria-labelledby': 'contacts-h' },
             h('div', { class: 'main-head' },
-              h('div', null, heading, h('p', { class: 'muted' }, `Contact details published for ${brand.name}.`)),
-              share),
+              h('div', null, heading, h('p', { class: 'muted' }, `Contact details published for ${brand.name}.`))),
             list, empty, status,
             h('aside', { class: 'note' },
               h('span', { class: 'tile gold' }, icon('alert', 20)),
